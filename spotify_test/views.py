@@ -33,8 +33,11 @@ def success(request):
     oauth = OAuth2Session(client=client)
     token = oauth.fetch_token(token_url='https://accounts.spotify.com/api/token', auth=auth)
 
+    test_track = oauth.get('https://api.spotify.com/v1/tracks/2TpxZ7JUBn3uw46aR7qd6V')
+    print(test_track.text)
 
-    return HttpResponse(f'we\'re in bitch <br> here\'s your access token ya filthy animal: {token}')
+
+    return HttpResponse(f'we\'re in bitch <br> here\'s your access token ya filthy animal: {token} <br><br> did the test track work? {test_track.text}')
 
 def playlists(request):
     pass
