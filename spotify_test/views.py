@@ -4,40 +4,37 @@ from spotify_test.config import client_id,client_secret
 from django.urls import reverse
 import urllib
 import requests
+from requests_oauthlib import OAuth2Session
+from requests.auth import HTTPBasicAuth
+from oauthlib.oauth2 import BackendApplicationClient
 import json
-import base64
 
 # Create your views here.
 
 
 def index(request):
+    redirect_uri = request.build_absolute_uri() + 'success/'
     scope='playlist-read-private'
-    response_type='code'
     show_dialog='true'
-    redirect_uri = urllib.parse.quote(request.build_absolute_uri() + 'success/')
-    return render(request, 'spotify_test/index.html', {'client_id':client_id, 'redirect_uri':redirect_uri, 'scope':scope, 'response_type':response_type, 'show_dialog':show_dialog })
+    request.session['redirect_uri'] = redirect_uri
+    request.session['scope'] = scope
+    request.session['show_dialog'] = 'true'
+    oauth = OAuth2Session(client_id, redirect_uri=request.session['redirect_uri'], scope=request.session['scope'])
+    print(oauth)
+    #request.session['oauth'] =  oauth
+    authorization_url, state = oauth.authorization_url('https://accounts.spotify.com/authorize', show_dialog='true')
+    print(authorization_url)
+    return render(request, 'spotify_test/index.html', { 'auth_url': authorization_url})
 
 def success(request):
-    code = request.GET.get('code')
-    redirect_uri = request.build_absolute_uri('/spotify/success/')
-    access_token_request_data = {
-        'grant_type':'authorization_code',
-        'code':code,
-        'redirect_uri':redirect_uri,
-        #'client_id':client_id,
-        #'client_secret':client_secret
-    }
-    combined_ids = f'{client_id}:{client_secret}'
-    encoded_combined = base64.b64encode(combined_ids.encode('utf-8'))
-    auth_headers = {
-        'Authorization': f'Basic {encoded_combined}'
-    }
-    print(auth_headers)
-    r = requests.post(url='https://accounts.spotify.com/api/token', data=access_token_request_data, headers=auth_headers)
 
-    request.session['spotify_auth'] = json.loads(r.text)
+    auth = HTTPBasicAuth(client_id, client_secret)
+    client = BackendApplicationClient(client_id=client_id)
+    oauth = OAuth2Session(client=client)
+    token = oauth.fetch_token(token_url='https://accounts.spotify.com/api/token', auth=auth)
 
-    return HttpResponse(f'we\'re in bitch <br> here\'s your code ya filthy animal: <br> {code} <br> and the access token {request.session["spotify_auth"]}')
+
+    return HttpResponse(f'we\'re in bitch <br> here\'s your access token ya filthy animal: {token}')
 
 def playlists(request):
     pass
