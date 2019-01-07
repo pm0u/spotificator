@@ -1,0 +1,11 @@
+
+<p> playlists </p>
+
+
+<ul>
+{% for playlist in playlists %}
+  <li><img src={{playlist.images.0.url}} height=50px />{{playlist.name}} - {{ playlist.owner.display_name }} - <a href={{playlist.href}}> view here!</a></li>
+{% endfor %}
+
+{{ playlists.0.images.url }}
+</ul>

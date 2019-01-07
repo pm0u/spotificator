@@ -37,4 +37,18 @@ def success(request):
     authorization_response = request.get_full_path()
     token = oauth.fetch_token('https://accounts.spotify.com/api/token', client_id=client_id, client_secret=client_secret, authorization_response=authorization_response)
     request.session['token'] = token
-    return HttpResponse(f'{token}')
+    links = [{'href' : 'spotify_test:playlists', 'text': 'playlists'}, {'href': 'spotify_test:search', 'text': 'search'}]
+    return render(request, 'spotify_test/success.html', { 'links': links, 'token': token })
+
+def playlists(request):
+    user_info = oauth.get('https://api.spotify.com/v1/me')
+    user_json = json.loads(user_info.text)
+    request.session['user_id'] = user_json['id']
+
+    user_playlists = json.loads(oauth.get(f'https://api.spotify.com/v1/users/{request.session["user_id"]}/playlists').text)
+
+    return render(request, 'spotify_test/playlists.html', { 'playlists': user_playlists['items'] } )
+
+def search(request):
+
+    return HttpResponse('this will be a search some day')
